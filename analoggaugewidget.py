@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#! python
 
 ###
 # Author: Stefan Holstein
@@ -25,23 +25,24 @@ import math
 
 try:
     # print("trying to import Qt4 @ analoggaugewidget.py")
-    from PyQt4.QtGui import QMainWindow
+    from PySide6.QtWidgets import QMainWindow
 
-    from PyQt4.QtGui import QWidget
-    from PyQt4.QtGui import QApplication
-    from PyQt4.QtGui import QPolygon, QPolygonF, QColor, QPen, QFont
-    from PyQt4.QtGui import QPainter, QFontMetrics, QConicalGradient
+    from PySide6.QtWidgets import QWidget
+    from PySide6.QtWidgets import QApplication
+    from PySide6.QtGui import QPolygon, QPolygonF, QColor, QPen, QFont
+    from PySide6.QtGui import QPainter, QFontMetrics, QConicalGradient
     # QtGui -> QPolygon, QPolygonF, QColor, QPen, QFont,
     #       -> QWidget
     #       -> QApplication
 
-    from PyQt4.QtCore import Qt, QTime, QTimer, QPoint, QPointF, SIGNAL, QRect, QSize
-    from PyQt4.QtCore import QObject, pyqtSignal
+    from PySide6.QtCore import Qt, QTime, QTimer, QPoint, QPointF, QRect, QSize
+    from PySide6.QtCore import QObject
+    from PySide6.QtCore import Signal as pyqtSignal
     # QtCore -> Qt.NoPen, QTime, QTimer, QPoint, QPointF, QRect, QSize
 
 
-    used_Qt_Version = 4
-    print("end trying to import Qt4 @ analoggaugewidget.py")
+    used_PYSIDE_Version = 6
+    print("end trying to import PySide6 @ analoggaugewidget.py")
     # Antialysing may be problem with Qt4
     print("ToDo: Fix error output QPainter.Antialiasing")
 
@@ -208,9 +209,9 @@ class AnalogGaugeWidget(QWidget):
         self.change_value_needle_style([QPolygon([
             QPoint(4, 30),
             QPoint(-4, 30),
-            QPoint(-2, - self.widget_diameter / 2 * self.needle_scale_factor),
-            QPoint(0, - self.widget_diameter / 2 * self.needle_scale_factor - 6),
-            QPoint(2, - self.widget_diameter / 2 * self.needle_scale_factor)
+            QPoint(-2, int(- self.widget_diameter / 2 * self.needle_scale_factor)),
+            QPoint(0, int(- self.widget_diameter / 2 * self.needle_scale_factor - 6)),
+            QPoint(2, int(- self.widget_diameter / 2 * self.needle_scale_factor))
         ])])
         # needle = [QPolygon([
         #     QPoint(4, 4),
@@ -511,7 +512,7 @@ class AnalogGaugeWidget(QWidget):
                 (((self.widget_diameter / 2) - (self.pen.width() / 2)) * self.gauge_color_inner_radius_factor),
                 self.scale_angle_start_value, self.scale_angle_size)
 
-            gauge_rect = QRect(QPoint(0, 0), QSize(self.widget_diameter / 2 - 1, self.widget_diameter - 1))
+            gauge_rect = QRect(QPoint(0, 0), QSize(int(self.widget_diameter / 2 - 1), int(self.widget_diameter - 1)))
             grad = QConicalGradient(QPointF(0, 0), - self.scale_angle_size - self.scale_angle_start_value +
                                     self.angle_offset - 1)
 
@@ -546,8 +547,8 @@ class AnalogGaugeWidget(QWidget):
 
         my_painter.rotate(self.scale_angle_start_value - self.angle_offset)
         steps_size = (float(self.scale_angle_size) / float(self.scala_main_count))
-        scale_line_outer_start = self.widget_diameter/2
-        scale_line_lenght = (self.widget_diameter / 2) - (self.widget_diameter / 20)
+        scale_line_outer_start = int(self.widget_diameter/2)
+        scale_line_lenght = int((self.widget_diameter / 2) - (self.widget_diameter / 20))
         # print(stepszize)
         for i in range(self.scala_main_count+1):
             my_painter.drawLine(scale_line_lenght, 0, scale_line_outer_start, 0)
@@ -561,7 +562,7 @@ class AnalogGaugeWidget(QWidget):
         # Koordinatenursprung in die Mitte der Flaeche legen
         painter.translate(self.width() / 2, self.height() / 2)
         # painter.save()
-        font = QFont(self.scale_fontname, self.scale_fontsize)
+        font = QFont(self.scale_fontname, int(self.scale_fontsize))
         fm = QFontMetrics(font)
 
         pen_shadow = QPen()
@@ -578,14 +579,16 @@ class AnalogGaugeWidget(QWidget):
         for i in range(self.scala_main_count + 1):
             # text = str(int((self.value_max - self.value_min) / self.scala_main_count * i))
             text = str(int(self.value_min + scale_per_div * i))
-            w = fm.width(text) + 1
-            h = fm.height()
-            painter.setFont(QFont(self.scale_fontname, self.scale_fontsize))
+            # w = fm.width(text) + 1
+            w = fm.boundingRect(text,).width()
+            # h = fm.height()
+            h = fm.boundingRect(text,).height()
+            painter.setFont(QFont(self.scale_fontname, int(self.scale_fontsize)))
             angle = angle_distance * i + float(self.scale_angle_start_value - self.angle_offset)
             x = text_radius * math.cos(math.radians(angle))
             y = text_radius * math.sin(math.radians(angle))
             # print(w, h, x, y, text)
-            text = [x - int(w/2), y - int(h/2), int(w), int(h), Qt.AlignCenter, text]
+            text = [int(x - int(w/2)), int(y) - int(h/2), int(w), int(h), Qt.AlignCenter, text]
             painter.drawText(text[0], text[1], text[2], text[3], text[4], text[5])
         # painter.restore()
 
@@ -600,8 +603,8 @@ class AnalogGaugeWidget(QWidget):
         my_painter.setPen(Qt.black)
         my_painter.rotate(self.scale_angle_start_value - self.angle_offset)
         steps_size = (float(self.scale_angle_size) / float(self.scala_main_count * self.scala_subdiv_count))
-        scale_line_outer_start = self.widget_diameter/2
-        scale_line_lenght = (self.widget_diameter / 2) - (self.widget_diameter / 40)
+        scale_line_outer_start = int(self.widget_diameter/2)
+        scale_line_lenght = int((self.widget_diameter / 2) - (self.widget_diameter / 40))
         for i in range((self.scala_main_count * self.scala_subdiv_count)+1):
             my_painter.drawLine(scale_line_lenght, 0, scale_line_outer_start, 0)
             my_painter.rotate(steps_size)
@@ -616,7 +619,7 @@ class AnalogGaugeWidget(QWidget):
         # painter.save()
         # xShadow = 3.0
         # yShadow = 3.0
-        font = QFont(self.value_fontname, self.value_fontsize)
+        font = QFont(self.value_fontname, int(self.value_fontsize))
         fm = QFontMetrics(font)
 
         pen_shadow = QPen()
@@ -629,9 +632,11 @@ class AnalogGaugeWidget(QWidget):
         # angle_distance = (float(self.scale_angle_size) / float(self.scala_main_count))
         # for i in range(self.scala_main_count + 1):
         text = str(int(self.value))
-        w = fm.width(text) + 1
-        h = fm.height()
-        painter.setFont(QFont(self.value_fontname, self.value_fontsize))
+        # w = fm.width(text) + 1
+        w = fm.boundingRect(text,).width()
+        # h = fm.height()
+        h = fm.boundingRect(text,).height()
+        painter.setFont(QFont(self.value_fontname, int(self.value_fontsize)))
 
         # Mitte zwischen Skalenstart und Skalenende:
         # Skalenende = Skalenanfang - 360 + Skalenlaenge
@@ -642,7 +647,7 @@ class AnalogGaugeWidget(QWidget):
         x = text_radius * math.cos(math.radians(angle))
         y = text_radius * math.sin(math.radians(angle))
         # print(w, h, x, y, text)
-        text = [x - int(w/2), y - int(h/2), int(w), int(h), Qt.AlignCenter, text]
+        text = [int(x) - int(w/2), int(y) - int(h/2), int(w), int(h), Qt.AlignCenter, text]
         painter.drawText(text[0], text[1], text[2], text[3], text[4], text[5])
         # painter.restore()
 
@@ -742,7 +747,7 @@ class AnalogGaugeWidget(QWidget):
         pass
 
     def mouseMoveEvent(self, event):
-        x, y = event.x() - (self.width() / 2), event.y() - (self.height() / 2)
+        x, y = event.globalPosition().x() - (self.width() / 2), event.globalPosition().y() - (self.height() / 2)
         if not x == 0:
             angle = math.atan2(y, x) / math.pi * 180
             # winkellaenge der anzeige immer positiv 0 - 360deg
@@ -818,17 +823,17 @@ if __name__ == '__main__':
         app = QApplication(sys.argv)
         my_gauge = AnalogGaugeWidget()
         my_gauge.show()
-        sys.exit(app.exec_())
+        sys.exit(app.exec())
 
-    class mainclass():
+    class Demo():
 
         def __init__(self):
             import os  # Used in Testing Script
             import sys
 
-            if used_Qt_Version == 4:
-                print("Compile QUI for Qt Version: " + str(used_Qt_Version))
-                os.system("pyuic4 -o analoggaugewidget_demo_ui.py analoggaugewidget_demo.ui")
+            if used_PYSIDE_Version == 6:
+                print("Compile QUI for PySide Version: " + str(used_PYSIDE_Version))
+                os.system("pyside6-uic -o analoggaugewidget_demo_ui.py analoggaugewidget_demo.ui")
             elif used_Qt_Version == 5:
                 print("Compile QUI for Qt Version: " + str(used_Qt_Version))
                 os.system("pyuic5 -o analoggaugewidget_demo_ui.py analoggaugewidget_demo.ui")
@@ -849,11 +854,11 @@ if __name__ == '__main__':
             self.my_gauge.widget.scala_main_count = 11
             self.my_gauge.ActualSlider.setMaximum(self.my_gauge.widget.value_max)
             self.my_gauge.ActualSlider.setMinimum(self.my_gauge.widget.value_min)
-            self.my_gauge.AussenRadiusSlider.setValue(self.my_gauge.widget.gauge_color_outer_radius_factor * 1000)
-            self.my_gauge.InnenRadiusSlider.setValue(self.my_gauge.widget.gauge_color_inner_radius_factor * 1000)
+            self.my_gauge.AussenRadiusSlider.setValue(int(self.my_gauge.widget.gauge_color_outer_radius_factor * 1000))
+            self.my_gauge.InnenRadiusSlider.setValue(int(self.my_gauge.widget.gauge_color_inner_radius_factor * 1000))
 
-            self.my_gauge.GaugeStartSlider.setValue(self.my_gauge.widget.scale_angle_start_value)
-            self.my_gauge.GaugeSizeSlider.setValue(self.my_gauge.widget.scale_angle_size)
+            self.my_gauge.GaugeStartSlider.setValue(int(self.my_gauge.widget.scale_angle_start_value))
+            self.my_gauge.GaugeSizeSlider.setValue(int(self.my_gauge.widget.scale_angle_size))
 
             # set Start Value
             # self.my_gauge.widget.update_value(self.my_gauge.widget.value_min)
@@ -934,7 +939,7 @@ if __name__ == '__main__':
             # my_gauge.widget.set_scale_polygon_colors([[.0, Qt.yellow]])
             # my_gauge.widget.set_scale_polygon_colors(None)
             # my_gauge.widget.enable_filled_Polygon = False
-            sys.exit(self.app.exec_())
+            sys.exit(self.app.exec())
 
         def set_NeedleColor(self):
             #print(self.my_gauge.RedSlider.value())
@@ -1001,4 +1006,5 @@ if __name__ == '__main__':
     ############################################
     # Run DEMO Routine
     ############################################
-    main = mainclass()
+    main = Demo()
+    # main()
