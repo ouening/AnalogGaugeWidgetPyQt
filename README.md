@@ -1,7 +1,7 @@
 # AnaloGaugeWidgetPyQt
 
 Custom QWidget 
-- compatible to PyQt4 and PyQt5
+- compatible to Pyside6 and PyQt5
 
 ![AnalogGaugeWidgetDemo Image](img/AnalogGaugeWidgetDemo.JPG?raw=true "AnalogGaugeWidgetDemo")
 
